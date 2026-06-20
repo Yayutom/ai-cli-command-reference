@@ -262,7 +262,7 @@ h1 {
 
 .control-band {
   display: grid;
-  grid-template-columns: minmax(240px, 1fr) auto auto;
+  grid-template-columns: minmax(240px, 1fr) minmax(160px, 220px);
   gap: 14px;
   align-items: end;
   margin-top: 20px;
@@ -284,6 +284,7 @@ h1 {
 }
 
 .search-field input,
+.search-field select,
 .filter-row select {
   width: 100%;
   min-width: 0;
@@ -634,6 +635,225 @@ h1 {
 .footer p {
   width: min(1480px, 100%);
   margin: 0 auto;
+}
+
+/* --- reference (paired, by purpose) --- */
+.cat-group {
+  margin-top: 22px;
+}
+
+.cat-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.cat-head h3 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.cat-count {
+  display: inline-flex;
+  align-items: center;
+  min-height: 22px;
+  padding: 1px 9px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.pair-list {
+  display: grid;
+  gap: 10px;
+}
+
+.pair {
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.pair-head {
+  margin-bottom: 12px;
+}
+
+.pair-head h4 {
+  margin: 0 0 4px;
+  font-size: 1rem;
+}
+
+.usecase {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.pair-tools {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 10px;
+}
+
+.tool-block {
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface-strong);
+}
+
+.tool-block.is-anchor {
+  border-left-color: var(--claude);
+}
+
+.tool-block.codex {
+  border-left-color: var(--codex);
+}
+
+.tool-name {
+  margin-bottom: 8px;
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  color: var(--muted);
+}
+
+.tool-block.is-anchor .tool-name {
+  color: var(--claude);
+}
+
+.tool-block.codex .tool-name {
+  color: var(--codex);
+}
+
+.tool-none {
+  margin: 0;
+  padding: 8px 10px;
+  border: 1px dashed var(--line);
+  border-radius: 6px;
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+
+.tui-line {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.tui-line > span {
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: var(--muted);
+}
+
+.tool-block .command-desc {
+  margin-top: 8px;
+}
+
+.pair-note {
+  margin: 12px 0 0;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+/* --- dictionary --- */
+.dict {
+  margin-top: 28px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.dict > summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 10px;
+  padding: 14px 16px;
+  cursor: pointer;
+  font-weight: 800;
+  list-style: none;
+}
+
+.dict > summary::-webkit-details-marker {
+  display: none;
+}
+
+.dict > summary::before {
+  content: "\25B8";
+  color: var(--muted);
+}
+
+.dict[open] > summary::before {
+  content: "\25BE";
+}
+
+.dict-title {
+  font-size: 1.05rem;
+}
+
+.dict-sub {
+  color: var(--muted);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.dict-cols {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+  padding: 0 16px 16px;
+}
+
+.dict-tool {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 6px 0 10px;
+  padding-bottom: 6px;
+  border-bottom: 2px solid var(--line);
+  font-size: 0.95rem;
+}
+
+.dict-tool.claude {
+  border-bottom-color: var(--claude);
+  color: var(--claude);
+}
+
+.dict-tool.codex {
+  border-bottom-color: var(--codex);
+  color: var(--codex);
+}
+
+.dict-tool span {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.dict-col .card-grid {
+  grid-template-columns: 1fr;
+}
+
+.dict-col .command-card {
+  min-height: 0;
+}
+
+.dict-empty {
+  color: var(--muted);
+  font-size: 0.88rem;
 }
 
 @media (max-width: 1120px) {

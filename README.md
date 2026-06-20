@@ -6,19 +6,18 @@ Live demo: https://yayutom.github.io/ai-cli-command-reference/
 
 ## What It Does
 
-This site maps Codex CLI and Claude Code commands by the job you want to do, with a bias toward the commands you actually type inside the TUI.
+This site lines up Codex CLI and Claude Code commands that do the same job, organized by purpose, so you can look one up from the other.
 
-- TUI / slash command first, instead of showing launch commands everywhere
-- Codex and Claude Code equivalents shown side by side
-- CLI-only commands kept as secondary references
-- Search and filters for parity, tool, and command type
+- Same-function commands shown side by side, Claude Code first
+- Grouped by purpose (Session, Auth, MCP, ...), with search and a category filter
+- A one-line "when to use" note on every function
+- Base command plus the in-session slash form when both exist
+- A full CLI / slash command dictionary kept as a secondary reference
 - One-click copy buttons for every command
 
 ## Why This Exists
 
-When switching between AI coding CLIs, the hard part is not remembering how to start the tool. The friction is remembering the command you need while you are already inside the TUI.
-
-This reference is designed around that workflow: start the agent once, then quickly find the slash command that does the job.
+If you use both tools, you usually remember one tool's commands better than the other's. This reference is built for that: find the command you already know (Claude Code) and read the equivalent right next to it (Codex), grouped by what you are trying to do.
 
 ## Verified Versions
 

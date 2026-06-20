@@ -512,23 +512,17 @@ const parityLabels = {
 };
 
 const state = {
-  view: "compare",
   query: "",
-  tool: "all",
-  parity: "all"
+  category: "all"
 };
 
 const el = typeof document === "undefined" ? {} : {
   results: document.querySelector("#results"),
   searchInput: document.querySelector("#searchInput"),
-  toolFilter: document.querySelector("#toolFilter"),
-  parityFilter: document.querySelector("#parityFilter"),
-  statPairs: document.querySelector("#statPairs"),
-  statCodex: document.querySelector("#statCodex"),
-  statClaude: document.querySelector("#statClaude"),
-  statSlash: document.querySelector("#statSlash"),
-  segments: [...document.querySelectorAll(".segment")]
+  categoryFilter: document.querySelector("#categoryFilter")
 };
+
+const COMMAND_NONE = "該当なし";
 
 function normalize(value) {
   return String(value || "").toLowerCase();
@@ -557,170 +551,42 @@ function matchesQuery(item) {
   return searchText(item).includes(normalize(state.query));
 }
 
-function getDisplayCommand(row, tool) {
-  const original = row[tool];
-  const override = tuiOverrides[row.task]?.[tool];
-  if (!override) {
-    return {
-      label: original.command.startsWith("/") ? "TUI" : "CLI",
-      command: original.command,
-      desc: original.desc,
-      secondary: null
-    };
-  }
+function inCategory(item) {
+  return state.category === "all" || item.category === state.category;
+}
+
+function referenceRows() {
+  return comparisonRows.filter((row) => !hiddenTuiTasks.has(row.task));
+}
+
+function allCategories() {
+  const order = [];
+  const seen = new Set();
+  const add = (category) => {
+    if (category && !seen.has(category)) {
+      seen.add(category);
+      order.push(category);
+    }
+  };
+  referenceRows().forEach((row) => add(row.category));
+  [...cliCommands, ...slashCommands].forEach((item) => add(item.category));
+  return order;
+}
+
+function toolForms(row, tool) {
   return {
-    label: override.label || "TUI",
-    command: override.command,
-    desc: override.desc || original.desc,
-    secondary: override.command === original.command ? null : original.command
+    base: row[tool],
+    tui: tuiOverrides[row.task]?.[tool] || null
   };
 }
 
-function commandHtml(row, tool) {
-  const label = tool === "codex" ? "Codex" : "Claude Code";
-  const entry = getDisplayCommand(row, tool);
-  return `
-    <div class="tool-label">
-      <span>${label} · ${escapeHtml(entry.label)}</span>
-    </div>
-    ${copyableCommandHtml(entry.command)}
-    <p class="command-desc">${escapeHtml(entry.desc)}</p>
-    ${
-      entry.secondary
-        ? `<div class="secondary-command"><span>CLI</span>${copyableCommandHtml(entry.secondary)}</div>`
-        : ""
-    }
-  `;
-}
-
-function badgeHtml(parity) {
-  return `<span class="badge ${parity}">${parityLabels[parity]}</span>`;
-}
-
-function hasTuiReference(row) {
-  return Boolean(tuiOverrides[row.task]) || row.codex.command.startsWith("/") || row.claude.command.startsWith("/");
-}
-
-function renderCompare() {
-  const rows = comparisonRows.filter((row) => {
-    if (hiddenTuiTasks.has(row.task)) return false;
-    if (!hasTuiReference(row)) return false;
-    if (state.parity !== "all" && row.parity !== state.parity) return false;
-    if (state.tool === "codex" && row.parity === "claude-only") return false;
-    if (state.tool === "claude" && row.parity === "codex-only") return false;
-    return matchesQuery(row);
-  });
-
-  return `
-    ${sectionHeader("TUI コマンド対応表", `${rows.length} 件表示。CLI しかない操作は CLI 一覧に分けています。`)}
-    ${rows.length ? `<div class="comparison-list">${rows.map(renderComparisonRow).join("")}</div>` : emptyState()}
-  `;
-}
-
-function renderComparisonRow(row) {
-  return `
-    <article class="comparison-row">
-      <div class="comparison-cell comparison-task">
-        <h3>${escapeHtml(row.task)}</h3>
-        <p>${escapeHtml(row.summary)}</p>
-      </div>
-      <div class="comparison-cell codex-cell">
-        ${commandHtml(row, "codex")}
-      </div>
-      <div class="comparison-cell claude-cell">
-        ${commandHtml(row, "claude")}
-      </div>
-      <div class="comparison-cell note-cell">
-        <strong>${badgeHtml(row.parity)} ${escapeHtml(row.category)}</strong>
-        <p>${escapeHtml(row.note)}</p>
-      </div>
-    </article>
-  `;
-}
-
-function renderCli() {
-  const items = cliCommands.filter((item) => {
-    if (state.tool !== "all" && item.tool !== state.tool) return false;
-    return matchesQuery(item);
-  });
-  return `
-    ${sectionHeader("CLI コマンド一覧", `${items.length} 件表示。起動時 flags と subcommand の参照用です。`)}
-    ${items.length ? `<div class="card-grid">${items.map(renderCommandCard).join("")}</div>` : emptyState()}
-  `;
-}
-
-function renderSlash() {
-  const items = slashCommands.filter((item) => {
-    if (state.tool !== "all" && item.tool !== state.tool) return false;
-    return matchesQuery(item);
-  });
-  return `
-    ${sectionHeader("Slash command 一覧", `${items.length} 件表示。interactive session 内で使うコマンドです。`)}
-    ${items.length ? `<div class="card-grid">${items.map(renderCommandCard).join("")}</div>` : emptyState()}
-  `;
-}
-
-function renderUnique() {
-  const uniqueRows = comparisonRows.filter((row) => {
-    if (!["codex-only", "claude-only"].includes(row.parity)) return false;
-    if (state.tool === "codex" && row.parity !== "codex-only") return false;
-    if (state.tool === "claude" && row.parity !== "claude-only") return false;
-    return matchesQuery(row);
-  });
-
-  const codexOriginal = slashCommands.filter((item) => item.tool === "codex" && !hasSlashPeer(item.command, "claude") && matchesQuery(item));
-  const claudeOriginal = slashCommands.filter((item) => item.tool === "claude" && !hasSlashPeer(item.command, "codex") && matchesQuery(item));
-  const originalCards = [
-    ...(state.tool !== "claude" ? codexOriginal : []),
-    ...(state.tool !== "codex" ? claudeOriginal : [])
-  ];
-
-  return `
-    ${sectionHeader("片側のみ・独自コマンド", `${uniqueRows.length + originalCards.length} 件表示。`)}
-    ${uniqueRows.length ? `<div class="comparison-list">${uniqueRows.map(renderComparisonRow).join("")}</div>` : ""}
-    ${originalCards.length ? `<div class="card-grid" style="margin-top:12px">${originalCards.map(renderCommandCard).join("")}</div>` : ""}
-    ${!uniqueRows.length && !originalCards.length ? emptyState() : ""}
-  `;
-}
-
-function slashNames(command) {
-  return command
-    .split(",")
-    .map((part) => part.trim().split(/\s+/)[0])
-    .filter(Boolean);
-}
-
-function hasSlashPeer(command, peerTool) {
-  const names = new Set(slashNames(command));
-  return slashCommands.some(
-    (item) => item.tool === peerTool && slashNames(item.command).some((name) => names.has(name))
-  );
-}
-
-function renderCommandCard(item) {
-  return `
-    <article class="command-card ${item.tool}">
-      ${copyableCommandHtml(item.command, "card-command")}
-      <p class="command-desc">${escapeHtml(item.desc)}</p>
-      <div class="card-meta">
-        <span class="tag">${item.tool === "codex" ? "Codex" : "Claude Code"}</span>
-        <span class="tag">${escapeHtml(item.category)}</span>
-      </div>
-    </article>
-  `;
-}
-
-function sectionHeader(title, subtitle) {
-  return `
-    <div class="section-header">
-      <h2>${escapeHtml(title)}</h2>
-      <p>${escapeHtml(subtitle)}</p>
-    </div>
-  `;
-}
-
-function emptyState() {
-  return `<div class="empty-state">条件に一致するコマンドはありません。</div>`;
+function escapeHtml(value) {
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
 }
 
 function copyableCommandHtml(command, extraClass = "") {
@@ -732,13 +598,106 @@ function copyableCommandHtml(command, extraClass = "") {
   `;
 }
 
-function escapeHtml(value) {
-  return String(value)
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
+function emptyState() {
+  return `<div class="empty-state">条件に一致するコマンドはありません。</div>`;
+}
+
+function toolBlock(row, tool) {
+  const label = tool === "claude" ? "Claude Code" : "Codex";
+  const { base, tui } = toolForms(row, tool);
+  const isNone = base.command === COMMAND_NONE;
+  const body = isNone
+    ? `<p class="tool-none">${escapeHtml(COMMAND_NONE)}</p>`
+    : `${copyableCommandHtml(base.command)}${tui ? `<div class="tui-line"><span>TUI</span>${copyableCommandHtml(tui.command)}</div>` : ""}`;
+  return `
+    <div class="tool-block ${tool}${tool === "claude" ? " is-anchor" : ""}">
+      <div class="tool-name">${label}</div>
+      ${body}
+      <p class="command-desc">${escapeHtml(base.desc)}</p>
+    </div>
+  `;
+}
+
+function renderPair(row) {
+  return `
+    <article class="pair">
+      <div class="pair-head">
+        <h4>${escapeHtml(row.task)}</h4>
+        <p class="usecase">${escapeHtml(row.summary)}</p>
+      </div>
+      <div class="pair-tools">
+        ${toolBlock(row, "claude")}
+        ${toolBlock(row, "codex")}
+      </div>
+      ${row.note ? `<p class="pair-note">${escapeHtml(row.note)}</p>` : ""}
+    </article>
+  `;
+}
+
+function renderReference() {
+  const groups = allCategories()
+    .filter((category) => state.category === "all" || category === state.category)
+    .map((category) => {
+      const rows = referenceRows().filter((row) => row.category === category && matchesQuery(row));
+      if (!rows.length) return "";
+      return `
+        <section class="cat-group">
+          <div class="cat-head">
+            <h3>${escapeHtml(category)}</h3>
+            <span class="cat-count">${rows.length}</span>
+          </div>
+          <div class="pair-list">${rows.map(renderPair).join("")}</div>
+        </section>
+      `;
+    })
+    .filter(Boolean);
+
+  if (!groups.length) return "";
+  return `
+    <div class="section-header">
+      <h2>用途別 対応表</h2>
+      <p>同じことをするコマンドを Claude Code 起点で横並びに。使い所も一言で。</p>
+    </div>
+    ${groups.join("")}
+  `;
+}
+
+function renderCommandCard(item) {
+  return `
+    <article class="command-card ${item.tool}">
+      ${copyableCommandHtml(item.command, "card-command")}
+      <p class="command-desc">${escapeHtml(item.desc)}</p>
+      <div class="card-meta">
+        <span class="tag">${escapeHtml(item.category)}</span>
+      </div>
+    </article>
+  `;
+}
+
+function renderDictionary() {
+  const items = [...cliCommands, ...slashCommands].filter((item) => inCategory(item) && matchesQuery(item));
+  if (!items.length) return "";
+  const claude = items.filter((item) => item.tool === "claude");
+  const codex = items.filter((item) => item.tool === "codex");
+  const open = state.query || state.category !== "all" ? " open" : "";
+  const column = (title, tool, list) => `
+    <div class="dict-col">
+      <h3 class="dict-tool ${tool}">${title} <span>${list.length}</span></h3>
+      ${list.length ? `<div class="card-grid">${list.map(renderCommandCard).join("")}</div>` : `<p class="dict-empty">${escapeHtml(COMMAND_NONE)}</p>`}
+    </div>
+  `;
+  return `
+    <details class="dict"${open}>
+      <summary>
+        <span class="dict-title">コマンド辞典</span>
+        <span class="dict-sub">全 CLI / slash · ${items.length} 件</span>
+      </summary>
+      <div class="dict-cols">
+        ${column("Claude Code", "claude", claude)}
+        ${column("Codex", "codex", codex)}
+      </div>
+    </details>
+  `;
 }
 
 async function copyText(value, button) {
@@ -782,25 +741,18 @@ async function copyText(value, button) {
   }
 }
 
-function updateStats() {
-  el.statPairs.textContent = comparisonRows.filter((row) => !hiddenTuiTasks.has(row.task) && hasTuiReference(row)).length;
-  el.statCodex.textContent = cliCommands.filter((item) => item.tool === "codex").length;
-  el.statClaude.textContent = cliCommands.filter((item) => item.tool === "claude").length;
-  el.statSlash.textContent = slashCommands.length;
+function populateCategories() {
+  if (!el.categoryFilter) return;
+  const options = ['<option value="all">用途すべて</option>'].concat(
+    allCategories().map((category) => `<option value="${escapeHtml(category)}">${escapeHtml(category)}</option>`)
+  );
+  el.categoryFilter.innerHTML = options.join("");
 }
 
 function render() {
-  el.segments.forEach((button) => {
-    const active = button.dataset.view === state.view;
-    button.classList.toggle("is-active", active);
-    button.setAttribute("aria-pressed", active ? "true" : "false");
-  });
-  el.parityFilter.disabled = state.view !== "compare";
-
-  if (state.view === "compare") el.results.innerHTML = renderCompare();
-  if (state.view === "cli") el.results.innerHTML = renderCli();
-  if (state.view === "slash") el.results.innerHTML = renderSlash();
-  if (state.view === "unique") el.results.innerHTML = renderUnique();
+  const reference = renderReference();
+  const dictionary = renderDictionary();
+  el.results.innerHTML = reference || dictionary ? `${reference}${dictionary}` : emptyState();
 }
 
 function bindEvents() {
@@ -813,24 +765,14 @@ function bindEvents() {
     state.query = event.target.value.trim();
     render();
   });
-  el.toolFilter.addEventListener("change", (event) => {
-    state.tool = event.target.value;
+  el.categoryFilter.addEventListener("change", (event) => {
+    state.category = event.target.value;
     render();
-  });
-  el.parityFilter.addEventListener("change", (event) => {
-    state.parity = event.target.value;
-    render();
-  });
-  el.segments.forEach((button) => {
-    button.addEventListener("click", () => {
-      state.view = button.dataset.view;
-      render();
-    });
   });
 }
 
 if (typeof document !== "undefined") {
-  updateStats();
+  populateCategories();
   bindEvents();
   render();
 }
@@ -839,9 +781,11 @@ if (typeof module !== "undefined" && module.exports) {
   module.exports = {
     matchesQuery,
     searchText,
-    hasSlashPeer,
-    slashNames,
-    getDisplayCommand,
+    referenceRows,
+    allCategories,
+    toolForms,
+    renderReference,
+    renderDictionary,
     state,
     comparisonRows,
     cliCommands,

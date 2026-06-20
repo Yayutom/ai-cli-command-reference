@@ -40,9 +40,9 @@
       <section class="intro-band" aria-labelledby="intro-title">
         <div class="intro-copy">
           <p class="project-kicker">Unofficial practical reference for Codex CLI and Claude Code</p>
-          <h2 id="intro-title">TUI で打つコマンドを主役にした対応表です。</h2>
+          <h2 id="intro-title">同じことをするコマンドを、Codex と Claude Code で横並び。</h2>
           <p>
-            起動コマンドは最初だけ。日常的に使う slash command を横並びにし、CLI でしか使わない操作は補助として残しています。
+            Claude Code は覚えているけど Codex は…という時に。Claude Code を起点に、隣の Codex 相当コマンドを見つけてください。用途から引けて、使い所も一言で分かります。
           </p>
         </div>
         <div class="intro-side">
@@ -74,50 +74,15 @@
         </div>
       </section>
 
-      <section class="control-band" aria-label="検索と表示切替">
+      <section class="control-band" aria-label="検索と絞り込み">
         <label class="search-field">
           <span>検索</span>
           <input id="searchInput" type="search" placeholder="例: review, MCP, resume, /branch" autocomplete="off" />
         </label>
-        <div class="segmented-control" role="group" aria-label="表示">
-          <button class="segment is-active" type="button" data-view="compare" aria-pressed="true">TUI 対応</button>
-          <button class="segment" type="button" data-view="cli" aria-pressed="false">CLI 一覧</button>
-          <button class="segment" type="button" data-view="slash" aria-pressed="false">Slash 一覧</button>
-          <button class="segment" type="button" data-view="unique" aria-pressed="false">片側のみ</button>
-        </div>
-        <div class="filter-row" aria-label="絞り込み">
-          <select id="toolFilter" aria-label="ツール">
-            <option value="all">両方</option>
-            <option value="codex">Codex</option>
-            <option value="claude">Claude Code</option>
-          </select>
-          <select id="parityFilter" aria-label="対応関係">
-            <option value="all">対応すべて</option>
-            <option value="same">同等</option>
-            <option value="similar">近い</option>
-            <option value="codex-only">Codex のみ</option>
-            <option value="claude-only">Claude のみ</option>
-          </select>
-        </div>
-      </section>
-
-      <section class="stats-grid" aria-label="登録件数">
-        <div class="stat-block">
-          <span id="statPairs">0</span>
-          <p>機能対応</p>
-        </div>
-        <div class="stat-block">
-          <span id="statCodex">0</span>
-          <p>Codex コマンド</p>
-        </div>
-        <div class="stat-block">
-          <span id="statClaude">0</span>
-          <p>Claude Code コマンド</p>
-        </div>
-        <div class="stat-block">
-          <span id="statSlash">0</span>
-          <p>Slash commands</p>
-        </div>
+        <label class="search-field">
+          <span>用途</span>
+          <select id="categoryFilter" aria-label="用途"></select>
+        </label>
       </section>
 
       <section id="results" class="results" aria-live="polite"></section>
