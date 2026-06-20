@@ -253,6 +253,82 @@ const comparisonRows = [
   }
 ];
 
+const hiddenTuiTasks = new Set(["対話セッションを開始"]);
+
+const tuiOverrides = {
+  "直近セッションを再開": {
+    codex: { command: "/resume", desc: "保存済み conversation picker から再開。", label: "TUI" },
+    claude: { command: "/resume, /continue", desc: "conversation picker から再開。", label: "TUI" }
+  },
+  "指定セッションを再開": {
+    codex: { command: "/resume", desc: "saved conversation list から対象を選ぶ。", label: "TUI" },
+    claude: { command: "/resume, /continue", desc: "conversation picker から対象を選ぶ。", label: "TUI" }
+  },
+  "会話を分岐": {
+    codex: { command: "/fork", desc: "current conversation を新しい thread に fork。", label: "TUI" },
+    claude: { command: "/branch", desc: "current conversation を分岐。", label: "TUI" }
+  },
+  "コードレビュー": {
+    codex: { command: "/review", desc: "working tree の review を依頼。", label: "TUI" },
+    claude: { command: "/code-review", desc: "diff review。必要に応じて --fix や ultra を指定。", label: "TUI" }
+  },
+  "ログイン": {
+    claude: { command: "/login", desc: "Anthropic account に sign in。", label: "TUI" }
+  },
+  "ログアウト": {
+    codex: { command: "/logout", desc: "Codex から sign out。", label: "TUI" },
+    claude: { command: "/logout", desc: "Claude Code から sign out。", label: "TUI" }
+  },
+  "認証状態を確認": {
+    codex: { command: "/status", desc: "session config、account、usage などを確認。", label: "TUI" },
+    claude: { command: "/status", desc: "version、model、account、connectivity を確認。", label: "TUI" }
+  },
+  "MCP を管理": {
+    codex: { command: "/mcp", desc: "configured MCP tools と server details を確認。", label: "TUI" },
+    claude: { command: "/mcp", desc: "MCP server connections と OAuth 状態を管理。", label: "TUI" }
+  },
+  "plugin を管理": {
+    codex: { command: "/plugins", desc: "plugin tools、install 候補、availability を確認。", label: "TUI" },
+    claude: { command: "/plugin", desc: "Claude Code plugins を管理。", label: "TUI" }
+  },
+  "健康診断": {
+    codex: { command: "/status", desc: "session config、writable roots、account 状態を確認。", label: "TUI" },
+    claude: { command: "/doctor", desc: "installation と settings を診断。", label: "TUI" }
+  },
+  "model を指定": {
+    codex: { command: "/model", desc: "active model と reasoning effort を選択。", label: "TUI" },
+    claude: { command: "/model", desc: "AI model を切り替え、default として保存可能。", label: "TUI" }
+  },
+  "作業ディレクトリを指定": {
+    claude: { command: "/cd", desc: "session の working directory を移動。", label: "TUI" }
+  },
+  "sandbox / permission を設定": {
+    codex: { command: "/permissions", desc: "承認なしで実行できる範囲を調整。", label: "TUI" },
+    claude: { command: "/permissions", desc: "tool permission rules を管理。", label: "TUI" }
+  },
+  "画像やファイルを初回 prompt に添付": {
+    codex: { command: "/mention", desc: "file/folder を conversation に attach。", label: "TUI" },
+    claude: { command: "/ide", desc: "IDE context や selection を使って文脈を渡す。", label: "TUI" }
+  },
+  "追加ディレクトリを許可": {
+    claude: { command: "/add-dir", desc: "current session に working directory access を追加。", label: "TUI" }
+  },
+  "desktop app": {
+    claude: { command: "/desktop, /app", desc: "current session を Claude Code Desktop app で続ける。", label: "TUI" }
+  },
+  "feature flag を管理": {
+    codex: { command: "/experimental", desc: "experimental features を toggle。", label: "TUI" },
+    claude: { command: "/config, /experimental", desc: "settings UI や experimental setting を確認。", label: "TUI" }
+  },
+  "background agent を管理": {
+    codex: { command: "/ps, /stop", desc: "background terminals を表示・停止。", label: "TUI" },
+    claude: { command: "/background, /tasks", desc: "background agent と tasks を管理。", label: "TUI" }
+  },
+  "cloud / web session": {
+    claude: { command: "/teleport, /tp", desc: "Claude Code on the web session を terminal に取り込む。", label: "TUI" }
+  }
+};
+
 const cliCommands = [
   { tool: "codex", name: "codex", command: "codex [OPTIONS] [PROMPT]", desc: "対話型 CLI を開始。subcommand なしなら options は interactive CLI に渡される。", category: "Session" },
   { tool: "codex", name: "exec", command: "codex exec [PROMPT]", desc: "非対話実行。CI、スクリプト、pipe 処理向け。alias: codex e。", category: "Automation" },
@@ -463,14 +539,39 @@ function matchesQuery(item) {
   return normalize(JSON.stringify(item)).includes(normalize(state.query));
 }
 
-function commandHtml(command, desc, tool) {
+function getDisplayCommand(row, tool) {
+  const original = row[tool];
+  const override = tuiOverrides[row.task]?.[tool];
+  if (!override) {
+    return {
+      label: original.command.startsWith("/") ? "TUI" : "CLI",
+      command: original.command,
+      desc: original.desc,
+      secondary: null
+    };
+  }
+  return {
+    label: override.label || "TUI",
+    command: override.command,
+    desc: override.desc || original.desc,
+    secondary: override.command === original.command ? null : original.command
+  };
+}
+
+function commandHtml(row, tool) {
   const label = tool === "codex" ? "Codex" : "Claude Code";
+  const entry = getDisplayCommand(row, tool);
   return `
     <div class="tool-label">
-      <span>${label}</span>
+      <span>${label} · ${escapeHtml(entry.label)}</span>
     </div>
-    <code class="cmd-line">${escapeHtml(command)}</code>
-    <p class="command-desc">${escapeHtml(desc)}</p>
+    ${copyableCommandHtml(entry.command)}
+    <p class="command-desc">${escapeHtml(entry.desc)}</p>
+    ${
+      entry.secondary
+        ? `<div class="secondary-command"><span>CLI</span>${copyableCommandHtml(entry.secondary)}</div>`
+        : ""
+    }
   `;
 }
 
@@ -478,8 +579,14 @@ function badgeHtml(parity) {
   return `<span class="badge ${parity}">${parityLabels[parity]}</span>`;
 }
 
+function hasTuiReference(row) {
+  return Boolean(tuiOverrides[row.task]) || row.codex.command.startsWith("/") || row.claude.command.startsWith("/");
+}
+
 function renderCompare() {
   const rows = comparisonRows.filter((row) => {
+    if (hiddenTuiTasks.has(row.task)) return false;
+    if (!hasTuiReference(row)) return false;
     if (state.parity !== "all" && row.parity !== state.parity) return false;
     if (state.tool === "codex" && row.parity === "claude-only") return false;
     if (state.tool === "claude" && row.parity === "codex-only") return false;
@@ -487,7 +594,7 @@ function renderCompare() {
   });
 
   return `
-    ${sectionHeader("同一機能の対応表", `${rows.length} 件表示。完全同等でないものは注記しています。`)}
+    ${sectionHeader("TUI コマンド対応表", `${rows.length} 件表示。CLI しかない操作は CLI 一覧に分けています。`)}
     ${rows.length ? `<div class="comparison-list">${rows.map(renderComparisonRow).join("")}</div>` : emptyState()}
   `;
 }
@@ -500,10 +607,10 @@ function renderComparisonRow(row) {
         <p>${escapeHtml(row.summary)}</p>
       </div>
       <div class="comparison-cell codex-cell">
-        ${commandHtml(row.codex.command, row.codex.desc, "codex")}
+        ${commandHtml(row, "codex")}
       </div>
       <div class="comparison-cell claude-cell">
-        ${commandHtml(row.claude.command, row.claude.desc, "claude")}
+        ${commandHtml(row, "claude")}
       </div>
       <div class="comparison-cell note-cell">
         <strong>${badgeHtml(row.parity)} ${escapeHtml(row.category)}</strong>
@@ -570,7 +677,7 @@ function hasSlashPeer(command, peerTool) {
 function renderCommandCard(item) {
   return `
     <article class="command-card ${item.tool}">
-      <h3>${escapeHtml(item.command)}</h3>
+      ${copyableCommandHtml(item.command, "card-command")}
       <p class="command-desc">${escapeHtml(item.desc)}</p>
       <div class="card-meta">
         <span class="tag">${item.tool === "codex" ? "Codex" : "Claude Code"}</span>
@@ -593,6 +700,15 @@ function emptyState() {
   return `<div class="empty-state">条件に一致するコマンドはありません。</div>`;
 }
 
+function copyableCommandHtml(command, extraClass = "") {
+  return `
+    <div class="copy-row">
+      <code class="cmd-line ${extraClass}">${escapeHtml(command)}</code>
+      <button class="copy-button" type="button" data-copy="${escapeHtml(command)}">Copy</button>
+    </div>
+  `;
+}
+
 function escapeHtml(value) {
   return String(value)
     .replaceAll("&", "&amp;")
@@ -602,8 +718,49 @@ function escapeHtml(value) {
     .replaceAll("'", "&#039;");
 }
 
+async function copyText(value, button) {
+  try {
+    let copied = false;
+    if (navigator.clipboard?.writeText) {
+      try {
+        await navigator.clipboard.writeText(value);
+        copied = true;
+      } catch {
+        copied = false;
+      }
+    }
+    if (!copied) {
+      const textarea = document.createElement("textarea");
+      textarea.value = value;
+      textarea.setAttribute("readonly", "");
+      textarea.style.position = "fixed";
+      textarea.style.left = "-9999px";
+      document.body.append(textarea);
+      textarea.focus();
+      textarea.select();
+      const ok = document.execCommand("copy");
+      textarea.remove();
+      if (!ok) throw new Error("copy command failed");
+    }
+    button.classList.remove("copy-failed");
+    button.classList.add("is-copied");
+    button.textContent = "Copied";
+    window.setTimeout(() => {
+      button.classList.remove("is-copied");
+      button.textContent = "Copy";
+    }, 1200);
+  } catch {
+    button.classList.add("copy-failed");
+    button.textContent = "Failed";
+    window.setTimeout(() => {
+      button.classList.remove("copy-failed");
+      button.textContent = "Copy";
+    }, 1400);
+  }
+}
+
 function updateStats() {
-  el.statPairs.textContent = comparisonRows.length;
+  el.statPairs.textContent = comparisonRows.filter((row) => !hiddenTuiTasks.has(row.task) && hasTuiReference(row)).length;
   el.statCodex.textContent = cliCommands.filter((item) => item.tool === "codex").length;
   el.statClaude.textContent = cliCommands.filter((item) => item.tool === "claude").length;
   el.statSlash.textContent = slashCommands.length;
@@ -622,6 +779,11 @@ function render() {
 }
 
 function bindEvents() {
+  document.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-copy]");
+    if (!button) return;
+    copyText(button.dataset.copy, button);
+  });
   el.searchInput.addEventListener("input", (event) => {
     state.query = event.target.value.trim();
     render();

@@ -1,12 +1,12 @@
 # Codex / Claude Code Command Reference
 
-Codex CLI と Claude Code の CLI / slash command を、同じ目的のコマンドが横並びで見えるようにした静的サイトです。
+Codex CLI と Claude Code の TUI / slash command を主軸に、同じ目的のコマンドが横並びで見えるようにした静的サイトです。各コマンドはワンクリックでコピーできます。
 
 ## Files
 
-- `index.html` - GitHub Pages でそのまま配信できる入口
+- `index.html` - ブラウザで直接開ける静的サイト入口
 - `styles.css` - レスポンシブ UI
-- `script.js` - コマンドデータ、検索、フィルタ、表示切替
+- `script.js` - コマンドデータ、検索、フィルタ、表示切替、コピー操作
 
 ## Verified Sources
 

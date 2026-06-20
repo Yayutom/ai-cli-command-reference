@@ -166,7 +166,7 @@ h1 {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(280px, 420px);
   gap: 24px;
-  align-items: end;
+  align-items: center;
   padding: clamp(20px, 3vw, 34px);
   border: 1px solid var(--line);
   border-radius: var(--radius);
@@ -193,6 +193,41 @@ h1 {
   grid-template-columns: 1fr;
   gap: 8px;
   min-width: 0;
+}
+
+.intro-side {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+
+.launcher-box {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: white;
+}
+
+.launcher-box p {
+  margin-bottom: 0;
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.launcher-grid {
+  display: grid;
+  gap: 8px;
+}
+
+.launcher-grid span {
+  display: block;
+  margin-bottom: 5px;
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 800;
 }
 
 .source-strip a {
@@ -395,6 +430,17 @@ h1 {
   text-transform: uppercase;
 }
 
+.copy-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: stretch;
+  gap: 8px;
+}
+
+.copy-row.compact {
+  gap: 6px;
+}
+
 .cmd-line {
   display: block;
   overflow-x: auto;
@@ -406,8 +452,57 @@ h1 {
   white-space: nowrap;
 }
 
-.cmd-line + .command-desc {
+.copy-button {
+  min-width: 68px;
+  min-height: 36px;
+  padding: 6px 10px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--surface-strong);
+  color: var(--ink);
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.copy-button:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.copy-button.is-copied {
+  border-color: var(--codex);
+  background: var(--codex-soft);
+  color: var(--codex);
+}
+
+.copy-button.copy-failed {
+  border-color: var(--claude);
+  background: var(--claude-soft);
+  color: var(--claude);
+}
+
+.copy-row + .command-desc {
   margin-top: 9px;
+}
+
+.secondary-command {
+  display: grid;
+  gap: 6px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+}
+
+.secondary-command span {
+  color: var(--muted);
+  font-size: 0.76rem;
+  font-weight: 800;
+}
+
+.secondary-command .cmd-line {
+  background: #eef1ec;
+  color: var(--ink);
 }
 
 .codex-cell .tool-label {
@@ -483,7 +578,7 @@ h1 {
 }
 
 .command-card h3 {
-  margin: 0 0 10px;
+  margin: 0 0 8px;
   font-size: 1rem;
 }
 
@@ -589,7 +684,8 @@ h1 {
 
   .filter-row,
   .stats-grid,
-  .card-grid {
+  .card-grid,
+  .copy-row {
     grid-template-columns: 1fr;
   }
 

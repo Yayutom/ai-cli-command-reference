@@ -31,17 +31,37 @@
     <main id="main" class="page-shell">
       <section class="intro-band" aria-labelledby="intro-title">
         <div class="intro-copy">
-          <h2 id="intro-title">同じ作業を、どちらのコマンドで実行するかをすぐ引ける表です。</h2>
+          <h2 id="intro-title">TUI で打つコマンドを主役にした対応表です。</h2>
           <p>
-            CLI 起動コマンド、非対話実行、認証、MCP、plugin、review、session 操作、slash command を整理しています。
-            完全同等ではないものは「近い」「片側のみ」として明示しています。
+            起動コマンドは最初だけ。日常的に使う slash command を横並びにし、CLI でしか使わない操作は補助として残しています。
           </p>
         </div>
-        <div class="source-strip" aria-label="参照元">
-          <a href="https://developers.openai.com/codex/cli/reference" target="_blank" rel="noreferrer">Codex CLI reference</a>
-          <a href="https://developers.openai.com/codex/cli/slash-commands" target="_blank" rel="noreferrer">Codex slash commands</a>
-          <a href="https://code.claude.com/docs/en/cli-reference" target="_blank" rel="noreferrer">Claude CLI reference</a>
-          <a href="https://code.claude.com/docs/en/commands" target="_blank" rel="noreferrer">Claude commands</a>
+        <div class="intro-side">
+          <div class="launcher-box" aria-label="起動コマンド">
+            <p>起動だけ</p>
+            <div class="launcher-grid">
+              <div>
+                <span>Codex</span>
+                <div class="copy-row compact">
+                  <code class="cmd-line">codex</code>
+                  <button class="copy-button" type="button" data-copy="codex">Copy</button>
+                </div>
+              </div>
+              <div>
+                <span>Claude Code</span>
+                <div class="copy-row compact">
+                  <code class="cmd-line">claude</code>
+                  <button class="copy-button" type="button" data-copy="claude">Copy</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="source-strip" aria-label="参照元">
+            <a href="https://developers.openai.com/codex/cli/reference" target="_blank" rel="noreferrer">Codex CLI reference</a>
+            <a href="https://developers.openai.com/codex/cli/slash-commands" target="_blank" rel="noreferrer">Codex slash commands</a>
+            <a href="https://code.claude.com/docs/en/cli-reference" target="_blank" rel="noreferrer">Claude CLI reference</a>
+            <a href="https://code.claude.com/docs/en/commands" target="_blank" rel="noreferrer">Claude commands</a>
+          </div>
         </div>
       </section>
 
@@ -51,7 +71,7 @@
           <input id="searchInput" type="search" placeholder="例: review, MCP, resume, /plan" autocomplete="off" />
         </label>
         <div class="segmented-control" role="tablist" aria-label="表示">
-          <button class="segment is-active" type="button" data-view="compare">対応表</button>
+          <button class="segment is-active" type="button" data-view="compare">TUI 対応</button>
           <button class="segment" type="button" data-view="cli">CLI 一覧</button>
           <button class="segment" type="button" data-view="slash">Slash 一覧</button>
           <button class="segment" type="button" data-view="unique">片側のみ</button>
