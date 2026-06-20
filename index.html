@@ -77,13 +77,13 @@
       <section class="control-band" aria-label="検索と表示切替">
         <label class="search-field">
           <span>検索</span>
-          <input id="searchInput" type="search" placeholder="例: review, MCP, resume, /plan" autocomplete="off" />
+          <input id="searchInput" type="search" placeholder="例: review, MCP, resume, /branch" autocomplete="off" />
         </label>
-        <div class="segmented-control" role="tablist" aria-label="表示">
-          <button class="segment is-active" type="button" data-view="compare">TUI 対応</button>
-          <button class="segment" type="button" data-view="cli">CLI 一覧</button>
-          <button class="segment" type="button" data-view="slash">Slash 一覧</button>
-          <button class="segment" type="button" data-view="unique">片側のみ</button>
+        <div class="segmented-control" role="group" aria-label="表示">
+          <button class="segment is-active" type="button" data-view="compare" aria-pressed="true">TUI 対応</button>
+          <button class="segment" type="button" data-view="cli" aria-pressed="false">CLI 一覧</button>
+          <button class="segment" type="button" data-view="slash" aria-pressed="false">Slash 一覧</button>
+          <button class="segment" type="button" data-view="unique" aria-pressed="false">片側のみ</button>
         </div>
         <div class="filter-row" aria-label="絞り込み">
           <select id="toolFilter" aria-label="ツール">

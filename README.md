@@ -48,6 +48,9 @@ open index.html
 - `index.html` - static site entry
 - `styles.css` - responsive UI
 - `script.js` - command data, search, filters, view switching, copy behavior
+- `smoke-test.js` - Node smoke test for the pure logic (`node smoke-test.js`)
+- `LICENSE` - MIT license
+- `.nojekyll` - disables Jekyll processing on GitHub Pages
 
 ## License
 

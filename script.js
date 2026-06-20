@@ -371,9 +371,9 @@ const cliCommands = [
   { tool: "claude", name: "project", command: "claude project purge [path]", desc: "project local state を削除。dry-run や interactive 確認あり。", category: "Project" },
   { tool: "claude", name: "remote-control", command: "claude remote-control", desc: "Claude.ai / app から制御できる remote control server を開始。", category: "Remote" },
   { tool: "claude", name: "respawn", command: "claude respawn <id>", desc: "background session を conversation intact で再起動。", category: "Background" },
-  { tool: "claude", name: "rm", command: "claude rm <id>", desc: "background session を list から remove。transcript は残る。", category: "Background" },
+  { tool: "claude", name: "rm", command: "claude rm <id>", desc: "background session と worktree を削除。stop と違い終了済みセッションにも使える。", category: "Background" },
   { tool: "claude", name: "setup-token", command: "claude setup-token", desc: "CI / scripts 用 long-lived OAuth token を生成。", category: "Auth" },
-  { tool: "claude", name: "stop", command: "claude stop <id>", desc: "background session を停止。alias: claude kill。", category: "Background" },
+  { tool: "claude", name: "stop", command: "claude stop <id>", desc: "background session を停止。会話は保持され claude attach <id> で再開可能。alias: claude kill。", category: "Background" },
   { tool: "claude", name: "ultrareview", command: "claude ultrareview [target]", desc: "cloud-hosted multi-agent code review を非対話で実行。", category: "Review" },
   { tool: "claude", name: "doctor", command: "claude doctor", desc: "Claude Code auto-updater と health を確認。", category: "Diagnostics" },
   { tool: "claude", name: "install", command: "claude install [version]", desc: "native build を install / reinstall。stable/latest/specific version。", category: "Install" },
@@ -518,7 +518,7 @@ const state = {
   parity: "all"
 };
 
-const el = {
+const el = typeof document === "undefined" ? {} : {
   results: document.querySelector("#results"),
   searchInput: document.querySelector("#searchInput"),
   toolFilter: document.querySelector("#toolFilter"),
@@ -534,9 +534,27 @@ function normalize(value) {
   return String(value || "").toLowerCase();
 }
 
+function searchText(item) {
+  const parts = [];
+  const push = (...values) => {
+    for (const value of values) {
+      if (value) parts.push(value);
+    }
+  };
+  push(item.category);
+  if (item.tool) push(item.tool === "codex" ? "Codex" : "Claude Code", item.command, item.desc);
+  push(item.task, item.summary, item.note, parityLabels[item.parity]);
+  if (item.codex) push(item.codex.command, item.codex.desc);
+  if (item.claude) push(item.claude.command, item.claude.desc);
+  const override = item.task ? tuiOverrides[item.task] : null;
+  if (override?.codex) push(override.codex.command, override.codex.desc, override.codex.label);
+  if (override?.claude) push(override.claude.command, override.claude.desc, override.claude.label);
+  return normalize(parts.join(" "));
+}
+
 function matchesQuery(item) {
   if (!state.query) return true;
-  return normalize(JSON.stringify(item)).includes(normalize(state.query));
+  return searchText(item).includes(normalize(state.query));
 }
 
 function getDisplayCommand(row, tool) {
@@ -645,7 +663,6 @@ function renderSlash() {
 function renderUnique() {
   const uniqueRows = comparisonRows.filter((row) => {
     if (!["codex-only", "claude-only"].includes(row.parity)) return false;
-    if (state.parity !== "all" && row.parity !== state.parity) return false;
     if (state.tool === "codex" && row.parity !== "codex-only") return false;
     if (state.tool === "claude" && row.parity !== "claude-only") return false;
     return matchesQuery(row);
@@ -666,12 +683,18 @@ function renderUnique() {
   `;
 }
 
-function hasSlashPeer(command, peerTool) {
-  const names = command
+function slashNames(command) {
+  return command
     .split(",")
-    .map((part) => part.trim().split(" ")[0])
+    .map((part) => part.trim().split(/\s+/)[0])
     .filter(Boolean);
-  return slashCommands.some((item) => item.tool === peerTool && names.some((name) => item.command.includes(name)));
+}
+
+function hasSlashPeer(command, peerTool) {
+  const names = new Set(slashNames(command));
+  return slashCommands.some(
+    (item) => item.tool === peerTool && slashNames(item.command).some((name) => names.has(name))
+  );
 }
 
 function renderCommandCard(item) {
@@ -768,9 +791,11 @@ function updateStats() {
 
 function render() {
   el.segments.forEach((button) => {
-    button.classList.toggle("is-active", button.dataset.view === state.view);
+    const active = button.dataset.view === state.view;
+    button.classList.toggle("is-active", active);
+    button.setAttribute("aria-pressed", active ? "true" : "false");
   });
-  el.parityFilter.disabled = !["compare", "unique"].includes(state.view);
+  el.parityFilter.disabled = state.view !== "compare";
 
   if (state.view === "compare") el.results.innerHTML = renderCompare();
   if (state.view === "cli") el.results.innerHTML = renderCli();
@@ -804,6 +829,24 @@ function bindEvents() {
   });
 }
 
-updateStats();
-bindEvents();
-render();
+if (typeof document !== "undefined") {
+  updateStats();
+  bindEvents();
+  render();
+}
+
+if (typeof module !== "undefined" && module.exports) {
+  module.exports = {
+    matchesQuery,
+    searchText,
+    hasSlashPeer,
+    slashNames,
+    getDisplayCommand,
+    state,
+    comparisonRows,
+    cliCommands,
+    slashCommands,
+    tuiOverrides,
+    parityLabels
+  };
+}
