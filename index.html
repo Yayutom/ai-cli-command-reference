@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Codex CLI と Claude Code の CLI / slash command を同一機能ごとに横並び比較できるリファレンス。"
+    />
+    <title>Codex / Claude Code Command Reference</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">本文へ移動</a>
+
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true">C</span>
+        <div>
+          <p class="eyebrow">Side-by-side command reference</p>
+          <h1>Codex / Claude Code コマンド比較</h1>
+        </div>
+      </div>
+      <div class="topbar-meta" aria-label="検証情報">
+        <span>Codex CLI 0.141.0</span>
+        <span>Claude Code 2.1.183</span>
+        <span>2026-06-20 検証</span>
+      </div>
+    </header>
+
+    <main id="main" class="page-shell">
+      <section class="intro-band" aria-labelledby="intro-title">
+        <div class="intro-copy">
+          <h2 id="intro-title">同じ作業を、どちらのコマンドで実行するかをすぐ引ける表です。</h2>
+          <p>
+            CLI 起動コマンド、非対話実行、認証、MCP、plugin、review、session 操作、slash command を整理しています。
+            完全同等ではないものは「近い」「片側のみ」として明示しています。
+          </p>
+        </div>
+        <div class="source-strip" aria-label="参照元">
+          <a href="https://developers.openai.com/codex/cli/reference" target="_blank" rel="noreferrer">Codex CLI reference</a>
+          <a href="https://developers.openai.com/codex/cli/slash-commands" target="_blank" rel="noreferrer">Codex slash commands</a>
+          <a href="https://code.claude.com/docs/en/cli-reference" target="_blank" rel="noreferrer">Claude CLI reference</a>
+          <a href="https://code.claude.com/docs/en/commands" target="_blank" rel="noreferrer">Claude commands</a>
+        </div>
+      </section>
+
+      <section class="control-band" aria-label="検索と表示切替">
+        <label class="search-field">
+          <span>検索</span>
+          <input id="searchInput" type="search" placeholder="例: review, MCP, resume, /plan" autocomplete="off" />
+        </label>
+        <div class="segmented-control" role="tablist" aria-label="表示">
+          <button class="segment is-active" type="button" data-view="compare">対応表</button>
+          <button class="segment" type="button" data-view="cli">CLI 一覧</button>
+          <button class="segment" type="button" data-view="slash">Slash 一覧</button>
+          <button class="segment" type="button" data-view="unique">片側のみ</button>
+        </div>
+        <div class="filter-row" aria-label="絞り込み">
+          <select id="toolFilter" aria-label="ツール">
+            <option value="all">両方</option>
+            <option value="codex">Codex</option>
+            <option value="claude">Claude Code</option>
+          </select>
+          <select id="parityFilter" aria-label="対応関係">
+            <option value="all">対応すべて</option>
+            <option value="same">同等</option>
+            <option value="similar">近い</option>
+            <option value="codex-only">Codex のみ</option>
+            <option value="claude-only">Claude のみ</option>
+          </select>
+        </div>
+      </section>
+
+      <section class="stats-grid" aria-label="登録件数">
+        <div class="stat-block">
+          <span id="statPairs">0</span>
+          <p>機能対応</p>
+        </div>
+        <div class="stat-block">
+          <span id="statCodex">0</span>
+          <p>Codex コマンド</p>
+        </div>
+        <div class="stat-block">
+          <span id="statClaude">0</span>
+          <p>Claude Code コマンド</p>
+        </div>
+        <div class="stat-block">
+          <span id="statSlash">0</span>
+          <p>Slash commands</p>
+        </div>
+      </section>
+
+      <section id="results" class="results" aria-live="polite"></section>
+    </main>
+
+    <footer class="footer">
+      <p>
+        Source: local <code>codex --help</code>, <code>claude --help</code>, OpenAI Codex docs, and Claude Code docs.
+        Commands change quickly; verify destructive or account-affecting operations before use.
+      </p>
+    </footer>
+
+    <script src="./script.js" defer></script>
+  </body>
+</html>
